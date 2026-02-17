@@ -13,7 +13,7 @@ provider "google" {
   project     = var.project-id
   region      = var.region
   zone        = var.zone
-  credentials = file("key.json")
+  credentials = file("../../key.json")
 }
 
 # Nginx proxy instance (single instance with external IP)

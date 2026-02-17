@@ -13,7 +13,7 @@ provider "google" {
   project = var.project-id
   region  = var.region
   zone    = var.zone
-  credentials = file("key.json")
+  credentials = file("../../key.json")
 }
 
 resource "google_compute_instance" "nginx_instance" {

@@ -53,3 +53,8 @@ includedPermissions:
   - storage.buckets.list
   - storage.buckets.update
   - storage.buckets.update
+  # For remote backend
+  - storage.objects.list
+  - storage.objects.create
+  - storage.objects.delete
+  - storage.objects.get

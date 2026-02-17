@@ -188,3 +188,20 @@ module.webservers.webserver-ips[*].name
 - Expose only what’s needed: Use `output` for values other config or modules need; avoid exposing internal resources unnecessarily.
 - Document variables: Use `description` in `variable` and `output` blocks.
 - Pin external modules: Use a version or ref in `source` (e.g. `?ref=v1.0.0`) for registry or Git modules so changes are predictable.
+
+### Remote backend
+https://developer.hashicorp.com/terraform/language/backend#overview 
+
+A remote backend stores Terraform state somewhere other than the a local `terraform.tfstate` file. Terraform supports GCS, S3, Terraform Cloud, kubernetes, and more places to store the files. Using a remote backend is important for several reasons:
+- Collaboration: With a local backend, only one person can run Terraform at a time without risking state conflicts or overwrites. A remote backend allows locking so that one person applies while others wait, and everyone works from the same source of truth.
+- State safety: Local state can be lost with disk failure, accidental deletion, or if it’s never committed. Remote backends provide durability, versioning, and backups.
+- Security: State often contains secrets (passwords, keys, IPs). Keeping it in a shared, access-controlled remote store is safer than scattering `terraform.tfstate` copies on laptops or in repos.
+- CI/CD: Pipelines need a consistent state to run `plan` and `apply`. A remote backend gives every run the same state without manual file copying.
+
+
+Let's use GCS bucket in our case. https://developer.hashicorp.com/terraform/language/backend/gcs
+We follow the following steps:
+1. First, create the required storage bucket in GCP
+2. Then add the backend inside the terraform block. 
+3. Then run `terraform init -backend-config="bucket=remotestate_s26-485220" -backend-config="credentials=key.json"`
+4. The config files will be stored in the remote backend.
