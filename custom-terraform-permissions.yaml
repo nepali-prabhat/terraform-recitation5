@@ -1,0 +1,55 @@
+# custom-terraform-permissions.yaml
+title: "Custom Permissions for Terraform"
+description: "Minimal permissions for Terraform (VMs, subnet, firewall)"
+stage: "GA"
+includedPermissions:
+  # Networks & subnetworks
+  - compute.networks.get
+  - compute.networks.updatePolicy
+  - compute.subnetworks.create
+  - compute.subnetworks.get
+  - compute.subnetworks.list
+  - compute.subnetworks.use
+  - compute.subnetworks.delete
+  - compute.subnetworks.useExternalIp
+  # Firewalls
+  - compute.firewalls.create
+  - compute.firewalls.delete
+  - compute.firewalls.get
+  - compute.firewalls.list
+  - compute.firewalls.update
+  # Instances
+  - compute.instances.create
+  - compute.instances.delete
+  - compute.instances.get
+  - compute.instances.list
+  - compute.instances.setLabels
+  - compute.instances.setMetadata
+  - compute.instances.setTags
+  - compute.instances.start
+  - compute.instances.stop
+  # Disks (needed for instance boot disks)
+  - compute.disks.create
+  - compute.disks.get
+  - compute.disks.list
+  - compute.disks.use
+  - compute.disks.useReadOnly
+  # Images (for debian-cloud/debian-11)
+  - compute.images.get
+  - compute.images.list
+  # Zones (for data source / listing)
+  - compute.zones.list
+  # Service Accounts
+  - iam.serviceAccounts.create
+  - iam.serviceAccounts.delete
+  - iam.serviceAccounts.get
+  - iam.serviceAccounts.list
+  - iam.serviceAccounts.update
+  - iam.serviceAccounts.update
+  # Storage
+  - storage.buckets.create
+  - storage.buckets.delete
+  - storage.buckets.get
+  - storage.buckets.list
+  - storage.buckets.update
+  - storage.buckets.update
