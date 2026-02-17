@@ -148,10 +148,7 @@ Make sure that these resources actually exist in your configuration.
 ### Modules
 Modules allow us to combine code into logical groups that can be managed together. For example, we can group several resources (e.g. a compute instance, firewall rules, a bucket) into a module and reuse that module across dev and prod, or across multiple projects.
 
-**Why use modules?**
-- **Reusability**: Define once, use in multiple places (e.g. "web server" module for dev and prod).
-- **Encapsulation**: Inputs and outputs define a clear interface; implementation details stay inside the module.
-- **Maintainability**: Change behavior in one place instead of copying blocks across files.
+It helps ensure reusability, encapsulation, and maintainability. 
 
 **Module structure (local module):**
 A module is a directory containing Terraform files. The root configuration calls it with a `module` block:
