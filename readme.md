@@ -148,54 +148,43 @@ Make sure that these resources actually exist in your configuration.
 ### Modules
 Modules allow us to combine code into logical groups that can be managed together. For example, we can group several resources (e.g. a compute instance, firewall rules, a bucket) into a module and reuse that module across dev and prod, or across multiple projects.
 
-It helps ensure reusability, encapsulation, and maintainability. 
+It helps ensure reusability, encapsulation, and maintainability.
 
-**Module structure (local module):**
-A module is a directory containing Terraform files. The root configuration calls it with a `module` block:
+#### What is a module?
+A **module** is a folder containing Terraform files (`.tf`) that define a set of resources. A module has:
+- **Inputs**: `variable` blocks that the caller passes in.
+- **Outputs**: `output` blocks that expose values to the caller.
+- **Resources**: The actual infrastructure (e.g. instances, networks) created by the module.
+
+#### Calling a module
+Use a `module` block in your root or another module to call a module:
 
 ```hcl
 module "web_instances" {
   source = "./web-server"
-
-  instance_count       = 3
-  machine_type         = var.environment_machine_type[var.target_environment]
-  labels               = { environment = var.environment_map[var.target_environment] }
-  network_self_link    = data.google_compute_network.default.self_link
-  subnetwork_self_link = google_compute_subnetwork.subnet-1.self_link
+  # Arguments...
 }
 ```
 
-- **source**: Path to the module (e.g. `./web-server` for a local folder, or a Git/registry URL).
-- Arguments passed into the block map to the module’s **input variables** (`variables.tf` inside the module).
-- Values from the module are exposed via **outputs**; the root module references them as `module.<name>.<output_name>` (e.g. `module.web_instances.network_ips`).
+- `source`: Path to the module. Can be:
+  - Local: `"./web-server"` (relative path), `../modules/network"`.
+  - Registry: `hashicorp/consul/aws"` (Terraform Registry).
+  - Git: `"git::https://github.com/org/repo.git?ref=v1.0.0"`.
+- Arguments: Pass values for the module’s input variables.
 
-**Example in this repo: `demo_codes/modules`**
+After adding or changing a module’s `source`, run `terraform init` so Terraform can fetch or link the module.
 
-We rewrote the layout from `demo_codes/project_organization` and separated the **web server (web-instances)** into its own module:
-
-| Before (`project_organization`) | After (`demo_codes/modules`) |
-|--------------------------------|------------------------------|
-| All instances (nginx, web0–web2, web-map, mysqldb) in root `main.tf` | Nginx, web-map, and mysqldb stay in root; the three `web-instances` live in a **web-server** module |
-
-**Layout of `demo_codes/modules`:**
-- **Root**: `main.tf`, `variables.tf`, `outputs.tf`, `networking.tf`, `data.tf`, `storage.tf`, `inputs.tfvars` — same roles as in project_organization, but `main.tf` uses `module "web_instances" { source = "./web-server" ... }` instead of a raw `google_compute_instance.web-instances` block.
-- **Module `web-server/`**: `main.tf` (resource `google_compute_instance.web-instances` with `count`), `variables.tf` (inputs like `instance_count`, `machine_type`, `labels`, `network_self_link`, `subnetwork_self_link`), `outputs.tf` (e.g. `network_ips`, `instance_names`).
-
-Root `outputs.tf` exposes the web VMs’ private IPs via the module:
+#### Using module outputs
+Reference outputs from a module as `module.<module_name>.<output_name>`:
 
 ```hcl
-output "webserver-ips" {
-  value = module.web_instances.network_ips
-}
+# Example: use private IPs of instances created by the module
+module.webservers.webserver-ips
+module.webservers.webserver-ips[*].name
 ```
 
-To run the example:
-```sh
-cd demo_codes/modules
-terraform init
-terraform plan -var-file=inputs.tfvars -out=tfplan
-terraform apply tfplan
-```
-
-See `demo_codes/modules/README.md` for a short walkthrough of the modules layout.
-
+#### Best practices
+- One purpose per module: Keep each module focused (e.g. “web servers”, “networking”, “storage”).
+- Expose only what’s needed: Use `output` for values other config or modules need; avoid exposing internal resources unnecessarily.
+- Document variables: Use `description` in `variable` and `output` blocks.
+- Pin external modules: Use a version or ref in `source` (e.g. `?ref=v1.0.0`) for registry or Git modules so changes are predictable.
