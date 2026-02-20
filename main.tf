@@ -19,7 +19,6 @@ provider "google" {
   credentials = file("key.json")
 }
 
-### NETWORK
 data "google_compute_zones" "available" {
   region = "us-central1"
 }
@@ -28,13 +27,11 @@ data "google_compute_network" "default" {
   name                    = "default"
 }
 
-## Local variables 
 locals {
   region = "us-central1"
   zones  = data.google_compute_zones.available.names
 }
 
-## SUBNET
 resource "google_compute_subnetwork" "subnet-1" {
   name                     = "subnet1"
   ip_cidr_range            = "10.127.0.0/20"
@@ -59,8 +56,6 @@ resource "google_compute_firewall" "default" {
   source_tags = ["web"]
 }
 
-### COMPUTE
-## NGINX PROXY
 resource "google_compute_instance" "nginx_instance" {
   name         = "nginx-proxy"
   machine_type = "f1-micro"
@@ -82,7 +77,6 @@ resource "google_compute_instance" "nginx_instance" {
   }
 }
 
-## WEB1
 resource "google_compute_instance" "web1" {
   name         = "web1"
   machine_type = "f1-micro"
@@ -95,12 +89,10 @@ resource "google_compute_instance" "web1" {
   }
 
   network_interface {
-    # A default network is created for all GCP projects
     network = data.google_compute_network.default.self_link
     subnetwork = google_compute_subnetwork.subnet-1.self_link
   }
 }
-## WEB2
 resource "google_compute_instance" "web2" {
   name         = "web2"
   machine_type = "f1-micro"
@@ -117,7 +109,6 @@ resource "google_compute_instance" "web2" {
     subnetwork = google_compute_subnetwork.subnet-1.self_link
   }
 }
-## WEB3
 resource "google_compute_instance" "web3" {
   name         = "web3"
   machine_type = "f1-micro"
@@ -135,7 +126,6 @@ resource "google_compute_instance" "web3" {
   }  
 }
 
-## DB
 resource "google_compute_instance" "mysqldb" {
   name         = "mysqldb"
   machine_type = "f1-micro"

@@ -75,37 +75,6 @@ terraform destroy s1.tfplan
 ```
 
 
-## Separating configs 
-Managing the entire terraform configuration in one file is difficult to maintain. Terraform doesn't impose a specfic way to structure your codebase but there is a general convention in the industry to manage your terraform projects. 
-Here are some common files:
-- **provider.tf**: Used for defining Terraform provider blocks and backend configuration.
-- **main.tf**: Contains the primary resources and overall infrastructure components.
-- **<resource_type>.tf**: For larger projects, we can group resources by their function, e.g. `networking.tf` for all the networking related resources, `storage.tf` for all the storage buckets and databases, etc.
-- **variables.tf**: All input variables (`variable` blocks) are defined here.
-- **outputs.tf**: Output values (`output` blocks) from your configuration are listed here.
-- **data.tf**: For data sources
-
-**Best Practices:**
-- Place input variables in `variables.tf` and outputs in `outputs.tf`.
-- Use separate `.tfvars` file for secrets and environment-specific values (these files should be gitignored). Eg: `dev.tfvars` , `prod.tfvars`
-- Keep tfstate, credentials and sensitive data outside version control
-
-## Passing input vars
-
-```sh
-# pass input values from flags
-terraform plan -out s1.tfplan -var="project-id=s26-485220"
-
-# pass input values from a file
-terraform plan -out s1.tfplan -var-file="inputs.tfvars"
-```
-Here, inputs.tfvars has `key=value` pair. The value needs to match the datatype of the variable. For example:
-```sh
-some_string_value = "double quoted"
-some_bool_value = true
-some_int_val = 2
-```
-
 ## HCL 
 
 ### expressions and functions
@@ -143,6 +112,65 @@ terraform console
 ```
 Make sure that these resources actually exist in your configuration.
 
+## Separating configs 
+Managing the entire terraform configuration in one file is difficult to maintain. Terraform doesn't impose a specfic way to structure your codebase but there is a general convention in the industry to manage your terraform projects. 
+Here are some common files:
+- **provider.tf**: Used for defining Terraform provider blocks and backend configuration.
+- **main.tf**: Contains the primary resources and overall infrastructure components.
+- **<resource_type>.tf**: For larger projects, we can group resources by their function, e.g. `networking.tf` for all the networking related resources, `storage.tf` for all the storage buckets and databases, etc.
+- **variables.tf**: All input variables (`variable` blocks) are defined here.
+- **outputs.tf**: Output values (`output` blocks) from your configuration are listed here.
+- **data.tf**: For data sources
+
+**Best Practices:**
+- Place input variables in `variables.tf` and outputs in `outputs.tf`.
+- Use separate `.tfvars` file for secrets and environment-specific values (these files should be gitignored). Eg: `dev.tfvars` , `prod.tfvars`
+- Keep tfstate, credentials and sensitive data outside version control
+
+## Passing input vars
+
+```sh
+# pass input values from flags
+terraform plan -out s1.tfplan -var="project-id=s26-485220"
+
+# pass input values from a file
+terraform plan -out s1.tfplan -var-file="inputs.tfvars"
+```
+Here, inputs.tfvars has `key=value` pair. The value needs to match the datatype of the variable. For example:
+```sh
+some_string_value = "double quoted"
+some_bool_value = true
+some_int_val = 2
+```
+
+### HOW is tfvars different than variables.tf
+
+**Example `variables.tf`:**
+```hcl
+variable "project_id" {
+  type        = string
+  description = "The GCP project ID"
+}
+
+variable "instance_count" {
+  type    = number
+  default = 1
+}
+```
+
+**Example `prod.tfvars`:**
+```hcl
+project_id     = "prod-project-123"
+instance_count = 5
+```
+
+Think of it as: `variables.tf` defines **what** variables exist and their constraints, while `.tfvars` provides the **actual values**. This separation allows you to reuse the same Terraform configuration across different environments (dev, staging, prod) by swapping out the `.tfvars` file.
+
+For example, we could have a `dev.tfvars` file with smaller instance_count
+```hcl
+project_id     = "test-project-123"
+instance_count = 1
+```
 
 
 ### Modules
