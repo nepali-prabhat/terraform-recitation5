@@ -1,3 +1,16 @@
+/*
+Demo 2: Terraform modules (GCP)
+
+Goal of this demo:
+- Keep the "root module" small and focused
+- Move repeated patterns (web server instances) into a reusable child module
+
+What you should notice:
+- The `module "webservers"` block wires inputs into `./modules/webservers`
+- Root module still owns shared infrastructure (subnet, firewall, proxy, DB)
+- Outputs can reference both resources in the root module and outputs from child modules
+*/
+
 terraform {
   required_version = ">= 1.0"
 
@@ -10,6 +23,7 @@ terraform {
 }
 
 provider "google" {
+  # Provider configuration applies to all google_* resources in this module.
   project     = var.project-id
   region      = var.region
   zone        = var.zone
@@ -39,11 +53,18 @@ resource "google_compute_instance" "nginx_instance" {
 }
 
 module "webservers" {
+  # `source` points at the child module directory (relative path here).
   source = "./modules/webservers"
-  project_id = var.project-id
+
+  # Pass values from root variables into the child module's variables.
+  # This is how modules become configurable/reusable.
+  project_id      = var.project-id
   server_settings = var.environment_instance_settings
-  region = var.region
-  zone = var.zone
+  region          = var.region
+  zone            = var.zone
+
+  # Instead of letting the module look up networking itself, we pass the IDs/links
+  # for the network/subnet created or referenced by the root module.
   network_interface = {
     network    = data.google_compute_network.default.self_link
     subnetwork = google_compute_subnetwork.subnet-1.self_link
@@ -65,6 +86,7 @@ resource "google_compute_instance" "mysqldb" {
   }
 
   network_interface {
+    # No `access_config` => private-only VM.
     network    = data.google_compute_network.default.self_link
     subnetwork = google_compute_subnetwork.subnet-1.self_link
   }

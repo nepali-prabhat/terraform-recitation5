@@ -1,26 +1,44 @@
+/*
+Child module: webservers (variables)
+
+Modules define their own input variables; the root module passes values in via:
+  module "webservers" { ... }
+
+Tip for students:
+- Strong types (map/object) make module interfaces clearer and catch mistakes earlier.
+*/
+
 variable "project_id" {
-    type = string
+  # GCP project ID for the web instances.
+  type = string
 }
 
 variable "server_settings" {
-    type = map(object({machine_type=string, labels=map(string)}))
+  # Map of settings keyed by environment name (e.g., DEV/PROD).
+  # Each value is an object describing how that environment's VM should look.
+  type = map(object({ machine_type = string, labels = map(string) }))
 }
 
 variable "prefix" {
-    type = string
-    default = "web"
+  # Optional prefix used to build VM names. If empty, no prefix is used.
+  type    = string
+  default = "web"
 }
 
 variable "network_interface" {
-    type = object({network=string, subnetwork=string})
+  # Pass in the network/subnet IDs (self_links) so the module doesn't own networking.
+  type = object({ network = string, subnetwork = string })
 }
 
 variable "region" {
-    type = string
+  # Included to show that modules can accept region/zone too, even if this module
+  # doesn't currently use them directly in the resource.
+  type = string
 }
 
 variable "zone" {
-    type = string
+  # Included for completeness / future expansion.
+  type = string
 }
 
 variable "labels" {

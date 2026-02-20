@@ -1,8 +1,18 @@
+/*
+Demo 1: Networking primitives
+
+This file creates:
+- A subnetwork (subnet) inside the default VPC network
+- A firewall rule allowing certain protocols/ports *to instances with specific network tags*
+*/
+
 resource "google_compute_subnetwork" "subnet-1" {
-  name                     = var.subnet-name
-  ip_cidr_range            = var.subnet-cidr
-  network                  = data.google_compute_network.default.self_link
-  region                   = var.region
+  name          = var.subnet-name
+  ip_cidr_range = var.subnet-cidr
+
+  network = data.google_compute_network.default.self_link
+  region  = var.region
+
   private_ip_google_access = var.private_google_access
 }
 

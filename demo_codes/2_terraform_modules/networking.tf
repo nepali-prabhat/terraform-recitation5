@@ -1,4 +1,13 @@
+/*
+Demo 2: Networking owned by the root module
+
+This file creates:
+- A subnet in the default VPC
+- A firewall rule allowing inbound traffic to tagged instances
+*/
+
 resource "google_compute_subnetwork" "subnet-1" {
+  # Create a subnet in the existing default network.
   name                     = var.subnet-name
   ip_cidr_range            = var.subnet-cidr
   network                  = data.google_compute_network.default.self_link
@@ -7,6 +16,7 @@ resource "google_compute_subnetwork" "subnet-1" {
 }
 
 resource "google_compute_firewall" "default" {
+  # Firewall rule scoped to instances using network tags.
   name    = "test-firewall"
   network = data.google_compute_network.default.self_link
 

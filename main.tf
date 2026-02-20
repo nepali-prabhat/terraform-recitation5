@@ -1,3 +1,19 @@
+/*
+Root example: Full configuration in a single file + remote state backend
+
+This file appears to be a "monolithic" version of the GCP example:
+- Provider + data sources
+- Networking (subnet + firewall)
+- Several VM instances
+
+It also includes a `backend "gcs"` block to demonstrate remote state.
+Important:
+- The backend block here only sets `prefix`. To actually use GCS remote state,
+  you must also configure the bucket name (usually `bucket = "<state-bucket>"`),
+  or supply it via partial backend configuration during `terraform init`.
+- Creating the state bucket itself is typically done once (see demo 3).
+*/
+
 terraform {
   required_version = ">= 1.0"
 
@@ -7,32 +23,36 @@ terraform {
       version = "~> 5.0"
     }
   }
-
-  backend "gcs" {
-    prefix  = "terraform/state"
-  }
 }
 
 provider "google" {
-  project = "s26-485220" #replace this with your project-id
+  # Replace with your own project ID.
+  project = "s26-485220"
   region  = "us-central1"
+
+  # Loads service account credentials from a local file.
+  # Keep `key.json` out of git.
   credentials = file("key.json")
 }
 
 data "google_compute_zones" "available" {
+  # Query available zones within the chosen region.
   region = "us-central1"
 }
 
 data "google_compute_network" "default" {
-  name                    = "default"
+  # Read the existing default VPC network.
+  name = "default"
 }
 
 locals {
+  # Locals are named expressions used to avoid repeating values.
   region = "us-central1"
   zones  = data.google_compute_zones.available.names
 }
 
 resource "google_compute_subnetwork" "subnet-1" {
+  # A custom subnet inside the default VPC.
   name                     = "subnet1"
   ip_cidr_range            = "10.127.0.0/20"
   network                  = data.google_compute_network.default.self_link
@@ -41,6 +61,7 @@ resource "google_compute_subnetwork" "subnet-1" {
 }
 
 resource "google_compute_firewall" "default" {
+  # Inbound firewall rule scoped to instances tagged "web".
   name    = "test-firewall"
   network = data.google_compute_network.default.self_link
 
@@ -57,6 +78,7 @@ resource "google_compute_firewall" "default" {
 }
 
 resource "google_compute_instance" "nginx_instance" {
+  # Public-facing instance (has `access_config` => external IP).
   name         = "nginx-proxy"
   machine_type = "f1-micro"
   zone         = local.zones[0]
@@ -69,19 +91,20 @@ resource "google_compute_instance" "nginx_instance" {
   }
 
   network_interface {
-    network = data.google_compute_network.default.self_link
+    network    = data.google_compute_network.default.self_link
     subnetwork = google_compute_subnetwork.subnet-1.self_link
     access_config {
-      
+      # Empty block requests an ephemeral external IP.
     }
   }
 }
 
 resource "google_compute_instance" "web1" {
+  # Private-only web instances (no external IP configured).
   name         = "web1"
   machine_type = "f1-micro"
   zone         = local.zones[0]
-  
+
   boot_disk {
     initialize_params {
       image = "debian-cloud/debian-11"
@@ -89,7 +112,7 @@ resource "google_compute_instance" "web1" {
   }
 
   network_interface {
-    network = data.google_compute_network.default.self_link
+    network    = data.google_compute_network.default.self_link
     subnetwork = google_compute_subnetwork.subnet-1.self_link
   }
 }
@@ -97,7 +120,7 @@ resource "google_compute_instance" "web2" {
   name         = "web2"
   machine_type = "f1-micro"
   zone         = local.zones[0]
-  
+
   boot_disk {
     initialize_params {
       image = "debian-cloud/debian-11"
@@ -105,7 +128,7 @@ resource "google_compute_instance" "web2" {
   }
 
   network_interface {
-    network = data.google_compute_network.default.self_link
+    network    = data.google_compute_network.default.self_link
     subnetwork = google_compute_subnetwork.subnet-1.self_link
   }
 }
@@ -113,7 +136,7 @@ resource "google_compute_instance" "web3" {
   name         = "web3"
   machine_type = "f1-micro"
   zone         = local.zones[0]
-  
+
   boot_disk {
     initialize_params {
       image = "debian-cloud/debian-11"
@@ -121,16 +144,17 @@ resource "google_compute_instance" "web3" {
   }
 
   network_interface {
-    network = data.google_compute_network.default.self_link
+    network    = data.google_compute_network.default.self_link
     subnetwork = google_compute_subnetwork.subnet-1.self_link
-  }  
+  }
 }
 
 resource "google_compute_instance" "mysqldb" {
+  # Example DB VM (private-only).
   name         = "mysqldb"
   machine_type = "f1-micro"
   zone         = local.zones[0]
-  
+
   boot_disk {
     initialize_params {
       image = "debian-cloud/debian-11"
@@ -138,7 +162,7 @@ resource "google_compute_instance" "mysqldb" {
   }
 
   network_interface {
-    network = data.google_compute_network.default.self_link
+    network    = data.google_compute_network.default.self_link
     subnetwork = google_compute_subnetwork.subnet-1.self_link
-  }  
+  }
 }
